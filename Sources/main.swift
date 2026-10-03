@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import Foundation
+import Combine
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let model = AppModel()
@@ -9,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var mainWindow: NSWindow!
     private var voicePanel: NSPanel?
     private var frontmostAppAtRecord: NSRunningApplication?
+    private var l10nCancellable: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // 单实例保护：已有 NoType 在跑时，本实例直接退出，避免多个实例抢快捷键、麦克风和剪贴板注入
@@ -22,6 +24,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         nlog("applicationDidFinishLaunching, AXIsProcessTrusted=\(AXIsProcessTrusted())")
         NSApp.setActivationPolicy(.regular)
         buildMainMenu()
+        l10nCancellable = L10n.shared.$language.sink { [weak self] _ in
+            self?.buildMainMenu()
+        }
         buildMainWindow()
         HotKeyManager.shared.onHotKey = { [weak self] keys in
             self?.toggle(keys: keys)
@@ -40,11 +45,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let appMenuItem = NSMenuItem()
         mainMenu.addItem(appMenuItem)
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "关于 NoType",
+        appMenu.addItem(withTitle: L("关于 NoType"),
                         action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
                         keyEquivalent: "")
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "退出 NoType",
+        appMenu.addItem(withTitle: L("退出 NoType"),
                         action: #selector(NSApplication.terminate(_:)),
                         keyEquivalent: "q")
         appMenuItem.submenu = appMenu
@@ -52,14 +57,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // 编辑菜单：没有它 SwiftUI 的 TextEditor/TextField 无法响应 ⌘A/⌘C/⌘V/⌘X
         let editMenuItem = NSMenuItem()
         mainMenu.addItem(editMenuItem)
-        let editMenu = NSMenu(title: "编辑")
-        editMenu.addItem(withTitle: "撤销", action: Selector(("undo:")), keyEquivalent: "z")
-        editMenu.addItem(withTitle: "重做", action: Selector(("redo:")), keyEquivalent: "Z")
+        let editMenu = NSMenu(title: L("编辑"))
+        editMenu.addItem(withTitle: L("撤销"), action: Selector(("undo:")), keyEquivalent: "z")
+        editMenu.addItem(withTitle: L("重做"), action: Selector(("redo:")), keyEquivalent: "Z")
         editMenu.addItem(.separator())
-        editMenu.addItem(withTitle: "剪切", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
-        editMenu.addItem(withTitle: "复制", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
-        editMenu.addItem(withTitle: "粘贴", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
-        editMenu.addItem(withTitle: "全选", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        editMenu.addItem(withTitle: L("剪切"), action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        editMenu.addItem(withTitle: L("复制"), action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: L("粘贴"), action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        editMenu.addItem(withTitle: L("全选"), action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         editMenuItem.submenu = editMenu
 
         NSApp.mainMenu = mainMenu
@@ -117,7 +122,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         speech.onFailure = { [weak self] msg in
             DispatchQueue.main.async {
                 self?.dismissVoiceBar()
-                self?.alert("无法开始录音：\(msg)")
+                self?.alert(L("无法开始录音：{0}", msg))
             }
         }
         speech.ensurePermissions { [weak self] granted, msg in
@@ -127,7 +132,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self.showVoiceBar()
                 self.speech.start()
             } else {
-                self.alert(msg ?? "缺少麦克风或语音识别权限")
+                self.alert(msg ?? L("缺少麦克风或语音识别权限"))
             }
         }
     }
@@ -136,7 +141,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         nlog("stopListening 开始")
         let prompt = activePrompt ?? PromptStore.shared.firstPrompt() ?? PromptStore.defaultDictate
         // 停止录音后进入 loading：语音条转圈，等最终识别 + AI 处理完成
-        speech.setProcessing(true, hint: prompt.isTranslate ? "正在翻译…" : "正在优化…")
+        speech.setProcessing(true, hint: prompt.isTranslate ? L("正在翻译…") : L("正在优化…"))
 
         let isOnline = (UserDefaults.standard.string(forKey: "notype.asrMode") ?? "local") == "online"
 
@@ -278,14 +283,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let a = NSAlert()
         a.alertStyle = .warning
         if textCopied {
-            a.messageText = "文字已复制到剪贴板，但无法自动注入"
-            a.informativeText = "NoType 尚未获得「辅助功能」权限，所以不能把文字自动粘贴到输入框（已帮你复制到剪贴板，可用 Cmd+V 手动粘贴）。\n\n开启后即可自动注入：\n① 打开「系统设置 → 隐私与安全性 → 辅助功能」\n② 如果列表里已有 NoType，先选中它点下方的「−」移除\n③ 再点「+」重新添加 NoType.app（位于 /Users/allenq/codes/NoType）\n④ 完全退出 NoType（Cmd+Q）后重新打开\n\n完成后按一下快捷键开始说话、再按一下结束即可自动注入。"
+            a.messageText = L("文字已复制到剪贴板，但无法自动注入")
+            a.informativeText = L("ax_help_copied")
         } else {
-            a.messageText = "需要开启「辅助功能」权限"
-            a.informativeText = "NoType 用快捷键「按一下开始说话、再按一下结束」，需要一个系统权限：辅助功能（用于把文字粘贴到任意输入框）。\n\n开启步骤：\n① 打开「系统设置 → 隐私与安全性 → 辅助功能」\n② 如果列表里已有 NoType，先选中它点下方的「−」移除\n③ 再点「+」重新添加 NoType.app（位于 /Users/allenq/codes/NoType）\n④ 完全退出 NoType（Cmd+Q）后重新打开"
+            a.messageText = L("需要开启「辅助功能」权限")
+            a.informativeText = L("ax_help_default")
         }
-        a.addButton(withTitle: "打开辅助功能设置")
-        a.addButton(withTitle: "稍后")
+        a.addButton(withTitle: L("打开辅助功能设置"))
+        a.addButton(withTitle: L("稍后"))
         if a.runModal() == .alertFirstButtonReturn {
             if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
                 NSWorkspace.shared.open(url)

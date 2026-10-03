@@ -39,7 +39,7 @@ final class SpeechService: NSObject, ObservableObject {
 
     /// 松开后 AI 优化/翻译进行中（语音条转 loading）
     @Published var isProcessing = false
-    @Published var processingHint = "正在优化…"
+    @Published var processingHint = L("正在优化…")
 
     // 流式打印：识别结果逐字追加显示（不删改），说话时更自然
     private var typewriterTarget = ""
@@ -56,12 +56,12 @@ final class SpeechService: NSObject, ObservableObject {
             AVCaptureDevice.requestAccess(for: .audio) { granted in
                 DispatchQueue.main.async {
                     nlog("麦克风权限请求结果: granted=\(granted)")
-                    completion(granted, granted ? nil : "需要在「系统设置 → 隐私与安全性 → 麦克风」中允许 NoType")
+                    completion(granted, granted ? nil : L("需要在「系统设置 → 隐私与安全性 → 麦克风」中允许 NoType"))
                 }
             }
         default:
             nlog("麦克风权限: 被拒绝")
-            completion(false, "需要在「系统设置 → 隐私与安全性 → 麦克风」中允许 NoType")
+            completion(false, L("需要在「系统设置 → 隐私与安全性 → 麦克风」中允许 NoType"))
         }
     }
 
@@ -205,7 +205,7 @@ final class SpeechService: NSObject, ObservableObject {
     }
 
     /// 设置/取消 processing 态（松开后 AI 优化或翻译期间，语音条转 loading）
-    func setProcessing(_ on: Bool, hint: String = "正在优化…") {
+    func setProcessing(_ on: Bool, hint: String = L("正在优化…")) {
         isProcessing = on
         processingHint = hint
     }

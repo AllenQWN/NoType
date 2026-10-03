@@ -3,6 +3,7 @@ import SwiftUI
 struct HomeView: View {
     @ObservedObject var model: AppModel
     @ObservedObject private var store = PromptStore.shared
+    @ObservedObject private var l10n = L10n.shared
 
     @State private var editorItem: PromptEditorItem?
 
@@ -22,20 +23,20 @@ struct HomeView: View {
     private var centerContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text("说话，\n不用打字")
+                Text(L("说话，\n不用打字"))
                     .font(.system(size: 34, weight: .heavy))
                     .tracking(-0.5)
                     .foregroundColor(Theme.text)
-                Text("自然表达，把你说的话变成精炼、可发送的文字——实时完成。")
+                Text(L("自然表达，把你说的话变成精炼、可发送的文字——实时完成。"))
                     .font(.system(size: 14))
                     .foregroundColor(Theme.text2)
                     .padding(.top, 6)
 
                 HStack(spacing: 6) {
-                    Text("快捷指令")
+                    Text(L("快捷指令"))
                         .font(.system(size: 13))
                         .foregroundColor(Theme.text3)
-                    Text("每一项都是一段可自定义的 Prompt，按一下对应快捷键开始、点 Edit 修改")
+                    Text(L("每一项都是一段可自定义的 Prompt，按一下对应快捷键开始、点 Edit 修改"))
                         .font(.system(size: 11))
                         .foregroundColor(Theme.text3)
                         .opacity(0.85)
@@ -55,7 +56,7 @@ struct HomeView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "plus")
                             .font(.system(size: 13, weight: .semibold))
-                        Text("新增 Prompt")
+                        Text(L("新增 Prompt"))
                             .font(.system(size: 13, weight: .semibold))
                     }
                     .frame(maxWidth: .infinity)
@@ -118,7 +119,7 @@ struct HomeView: View {
                 HStack(spacing: 5) {
                     Image(systemName: "pencil")
                         .font(.system(size: 11))
-                    Text("Edit")
+                    Text(L("编辑"))
                         .font(.system(size: 12.5, weight: .semibold))
                 }
                 .foregroundColor(Theme.brand)
@@ -154,13 +155,13 @@ struct HomeView: View {
     private var statsPanel: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("使用统计")
+                Text(L("使用统计"))
                     .font(.system(size: 13))
                     .foregroundColor(Theme.text3)
-                Text("15 分钟")
+                Text(L("15 分钟"))
                     .font(.system(size: 26, weight: .heavy))
                     .foregroundColor(Theme.text)
-                Text("本周录音时长")
+                Text(L("本周录音时长"))
                     .font(.system(size: 12))
                     .foregroundColor(Theme.text2)
             }
@@ -169,14 +170,14 @@ struct HomeView: View {
                 Text("122")
                     .font(.system(size: 22, weight: .heavy))
                     .foregroundColor(Theme.text)
-                Text("字 / 分钟")
+                Text(L("字 / 分钟"))
                     .font(.system(size: 12))
                     .foregroundColor(Theme.text2)
             }
             Spacer()
             Divider()
             VStack(alignment: .leading, spacing: 6) {
-                Text("🔒 你的数据仅保存在本机")
+                Text(L("🔒 你的数据仅保存在本机"))
                     .font(.system(size: 12))
                     .foregroundColor(Theme.text3)
                 Text("Version 1.0.0")
@@ -229,18 +230,18 @@ struct PromptEditorView: View {
                         .foregroundColor(Theme.brand)
                 }
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(isNew ? "新增 Prompt" : "编辑 Prompt")
+                    Text(isNew ? L("新增 Prompt") : L("编辑 Prompt"))
                         .font(.system(size: 15, weight: .bold))
                         .foregroundColor(Theme.text)
-                    Text(isNew ? "定义一个属于你的快捷指令" : "修改「\(prompt?.name ?? "")」的提示词")
+                    Text(isNew ? L("定义一个属于你的快捷指令") : L("修改「{0}」的提示词", prompt?.name ?? ""))
                         .font(.system(size: 12))
                         .foregroundColor(Theme.text3)
                 }
                 Spacer()
             }
 
-            fieldLabel("名称")
-            TextField("例如：总结、回复邮件…", text: $name)
+            fieldLabel(L("名称"))
+            TextField(L("例如：总结、回复邮件…"), text: $name)
                 .textFieldStyle(.plain)
                 .font(.system(size: 13))
                 .padding(10)
@@ -248,7 +249,7 @@ struct PromptEditorView: View {
                 .cornerRadius(9)
                 .overlay(RoundedRectangle(cornerRadius: 9).stroke(Theme.border))
 
-            fieldLabel("提示词 Prompt")
+            fieldLabel(L("提示词 Prompt"))
             TextEditor(text: $promptText)
                 .font(.system(size: 12))
                 .frame(minHeight: 120)
@@ -258,7 +259,7 @@ struct PromptEditorView: View {
                 .cornerRadius(9)
                 .overlay(RoundedRectangle(cornerRadius: 9).stroke(Theme.border))
 
-            fieldLabel("快捷键")
+            fieldLabel(L("快捷键"))
             ShortcutRecorder(text: $keysText)
                 .frame(height: 38)
                 .background(Theme.panel2)
@@ -266,7 +267,7 @@ struct PromptEditorView: View {
                 .overlay(RoundedRectangle(cornerRadius: 9).stroke(Theme.border))
 
             HStack(spacing: 8) {
-                Button("保存") { save() }
+                Button(L("保存")) { save() }
                     .buttonStyle(.plain)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.white)
@@ -275,7 +276,7 @@ struct PromptEditorView: View {
                     .background(Theme.brand)
                     .cornerRadius(8)
 
-                Button("取消") { dismiss() }
+                Button(L("取消")) { dismiss() }
                     .buttonStyle(.plain)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(Theme.text2)
@@ -288,13 +289,13 @@ struct PromptEditorView: View {
                 Spacer()
 
                 if canReset {
-                    Button("恢复默认") { resetToDefault() }
+                    Button(L("恢复默认")) { resetToDefault() }
                         .buttonStyle(.plain)
                         .font(.system(size: 13))
                         .foregroundColor(Theme.text3)
                 }
                 if canDelete {
-                    Button("删除") { deletePrompt() }
+                    Button(L("删除")) { deletePrompt() }
                         .buttonStyle(.plain)
                         .font(.system(size: 13))
                         .foregroundColor(Color.red.opacity(0.85))

@@ -66,10 +66,10 @@ final class ShortcutRecorderView: NSView {
         let text: String
         let color: NSColor
         if isRecording {
-            text = "请按下新快捷键（Esc 取消）"
+            text = L("请按下新快捷键（Esc 取消）")
             color = NSColor.controlAccentColor
         } else if displayText.isEmpty {
-            text = "点这里，再按下快捷键（如 ⌘1）"
+            text = L("点这里，再按下快捷键（如 ⌘1）")
             color = NSColor(calibratedWhite: 0.50, alpha: 1)
         } else {
             text = displayText

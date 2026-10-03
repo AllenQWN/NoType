@@ -36,6 +36,7 @@ swiftc -sdk "$SDK" \
        -module-cache-path "$CACHE" \
        -O \
        -o "$MACOS/NoType" \
+       "$HERE/Sources/L10n.swift" \
        "$HERE/Sources/Theme.swift" \
        "$HERE/Sources/PromptStore.swift" \
        "$HERE/Sources/ShortcutRecorder.swift" \

@@ -3,6 +3,7 @@ import SwiftUI
 struct RootView: View {
     @ObservedObject var model: AppModel
     @ObservedObject private var dropdownHost = DropdownHost.shared
+    @ObservedObject private var l10n = L10n.shared
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -47,8 +48,8 @@ struct RootView: View {
             .padding(.horizontal, 10)
             .padding(.bottom, 10)
 
-            navButton(.home, icon: "house", label: "主页")
-            navButton(.history, icon: "clock", label: "历史")
+            navButton(.home, icon: "house", label: L("主页"))
+            navButton(.history, icon: "clock", label: L("历史"))
 
             Spacer()
 
@@ -56,7 +57,7 @@ struct RootView: View {
                 Text("\(model.totalWordCount)")
                     .font(.system(size: 15, weight: .bold))
                     .foregroundColor(Theme.text)
-                Text("总字数")
+                Text(L("总字数"))
                     .font(.system(size: 11))
                     .foregroundColor(Theme.text3)
             }
@@ -71,7 +72,7 @@ struct RootView: View {
                 Image(systemName: "gearshape")
                     .font(.system(size: 13))
                     .frame(width: 16, alignment: .center)
-                Text("设置")
+                Text(L("设置"))
                     .font(.system(size: 13))
                 Spacer(minLength: 0)
             }

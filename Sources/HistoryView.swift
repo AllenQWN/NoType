@@ -2,9 +2,10 @@ import SwiftUI
 
 struct HistoryView: View {
     @ObservedObject var model: AppModel
+    @ObservedObject private var l10n = L10n.shared
     @State private var filter = 0
 
-    private let filters = ["全部", "听写", "翻译"]
+    private var filters: [String] { [L("全部"), L("听写"), L("翻译")] }
 
     private var filtered: [HistoryItem] {
         switch filter {
@@ -17,11 +18,11 @@ struct HistoryView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("历史记录")
+                Text(L("历史记录"))
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(Theme.text)
                 Spacer()
-                Text("🔒 你的数据仅存本机，只有你能访问")
+                Text(L("🔒 你的数据仅存本机，只有你能访问"))
                     .font(.system(size: 12.5))
                     .foregroundColor(Theme.text3)
             }
@@ -49,10 +50,10 @@ struct HistoryView: View {
                     Image(systemName: "clock")
                         .font(.system(size: 28))
                         .foregroundColor(Theme.text3)
-                    Text("还没有记录")
+                    Text(L("还没有记录"))
                         .font(.system(size: 13))
                         .foregroundColor(Theme.text3)
-                    Text("开始一次听写或翻译，内容会出现在这里。")
+                    Text(L("开始一次听写或翻译，内容会出现在这里。"))
                         .font(.system(size: 12))
                         .foregroundColor(Theme.text3)
                 }
@@ -76,7 +77,7 @@ struct HistoryView: View {
     private func itemRow(_ item: HistoryItem) -> some View {
         VStack(alignment: .leading, spacing: 7) {
             HStack(spacing: 8) {
-                Text(item.mode == .dictate ? "听写" : "翻译")
+                Text(item.mode == .dictate ? L("听写") : L("翻译"))
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(Theme.brand)
                     .padding(.horizontal, 8)
@@ -87,7 +88,7 @@ struct HistoryView: View {
                     .font(.system(size: 11.5))
                     .foregroundColor(Theme.text3)
                 Spacer()
-                Text("\(item.charCount) 字")
+                Text(L("{0} 字", "\(item.charCount)"))
                     .font(.system(size: 11.5))
                     .foregroundColor(Theme.text3)
             }

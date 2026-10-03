@@ -7,6 +7,7 @@ struct SettingsView: View {
     @ObservedObject private var ai = AIEngineManager.shared
     @ObservedObject private var asr = ASREngineManager.shared
     @ObservedObject private var mic = MicrophoneManager.shared
+    @ObservedObject private var l10n = L10n.shared
 
     @AppStorage("notype.aiMode") private var aiMode: String = "local"
     @AppStorage("notype.asrMode") private var asrMode: String = "local"
@@ -19,21 +20,26 @@ struct SettingsView: View {
     @AppStorage("notype.asrModelName") private var asrModelName = ""
     @AppStorage("notype.asrVersion") private var asrVersion = "2.0"
 
-    @State private var aiSaveLabel = "保存配置"
-    @State private var asrSaveLabel = "保存配置"
+    @State private var aiSaved = false
+    @State private var asrSaved = false
 
     // 行内标签宽度 + 与控件的间距，用于让按钮行等元素与控件列对齐
     private let labelWidth: CGFloat = 78
     private let fieldSpacing: CGFloat = 14
 
+    private var aiSaveLabel: String { aiSaved ? L("已保存 ✓") : L("保存配置") }
+    private var asrSaveLabel: String { asrSaved ? L("已保存 ✓") : L("保存配置") }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("设置")
+                Text(L("设置"))
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(Theme.text)
 
                 VStack(alignment: .leading, spacing: 0) {
+                    languageSection
+                    separator
                     micSection
                     separator
                     aiSection
@@ -53,14 +59,34 @@ struct SettingsView: View {
         .onAppear { ai.refreshStatus(); asr.refreshStatus(); mic.refresh() }
     }
 
+    // MARK: - 语言
+
+    private var languageSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            groupTitle(L("语言"))
+            field(L("界面语言")) { languagePicker }
+        }
+        .padding(.vertical, 18)
+    }
+
+    private var languagePicker: some View {
+        Dropdown(
+            options: AppLanguage.allCases.map { DropdownOption(label: L10n.shared.displayName($0), value: $0) },
+            selection: Binding<AppLanguage>(
+                get: { L10n.shared.language },
+                set: { L10n.shared.setLanguage($0) }
+            )
+        )
+    }
+
     // MARK: - 麦克风
 
     private var micSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            groupTitle("麦克风")
-            field("输入设备") { micPicker }
-            field("输入电平") { LevelMeterView(level: mic.level, isLive: mic.isMetering) }
-            primaryButton(mic.isMetering ? "停止测试" : "测试麦克风") {
+            groupTitle(L("麦克风"))
+            field(L("输入设备")) { micPicker }
+            field(L("输入电平")) { LevelMeterView(level: mic.level, isLive: mic.isMetering) }
+            primaryButton(mic.isMetering ? L("停止测试") : L("测试麦克风")) {
                 if mic.isMetering { mic.stopMetering() } else { mic.startMetering() }
             }
             .padding(.leading, labelWidth + fieldSpacing)
@@ -86,8 +112,8 @@ struct SettingsView: View {
 
     private var aiSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            groupTitle("AI 引擎")
-            field("类型") { modeSelect($aiMode) }
+            groupTitle(L("AI 引擎"))
+            field(L("类型")) { modeSelect($aiMode) }
             if aiMode == "online" { aiOnlinePanel } else { aiLocalPanel }
         }
         .padding(.vertical, 18)
@@ -95,7 +121,7 @@ struct SettingsView: View {
 
     private var aiLocalPanel: some View {
         VStack(alignment: .leading, spacing: 0) {
-            field("模型") { modelRow("qwen2.5:7b", on: ai.phase == .ready, label: ai.phase == .ready ? "已就绪" : aiStatusShort) }
+            field(L("模型")) { modelRow("qwen2.5:7b", on: ai.phase == .ready, label: ai.phase == .ready ? L("已就绪") : aiStatusShort) }
 
             if ai.phase == .working && ai.progress >= 0 {
                 ProgressView(value: ai.progress)
@@ -108,7 +134,7 @@ struct SettingsView: View {
             HStack(spacing: 12) {
                 primaryButton(buttonTitle, disabled: !canInstall) { ai.install() }
                 if ai.phase == .ready {
-                    hint("本地离线 · 4.7GB")
+                    hint(L("本地离线 · 4.7GB"))
                 }
             }
             .padding(.leading, labelWidth + fieldSpacing)
@@ -117,14 +143,14 @@ struct SettingsView: View {
 
     private var aiOnlinePanel: some View {
         VStack(alignment: .leading, spacing: 0) {
-            field("服务商") {
+            field(L("服务商")) {
                 Dropdown(
                     options: [
                         DropdownOption(label: "OpenAI", value: "OpenAI"),
-                        DropdownOption(label: "通义千问", value: "通义千问"),
+                        DropdownOption(label: L("通义千问"), value: "通义千问"),
                         DropdownOption(label: "DeepSeek", value: "DeepSeek"),
                         DropdownOption(label: "Moonshot (Kimi)", value: "Moonshot (Kimi)"),
-                        DropdownOption(label: "自定义", value: "自定义")
+                        DropdownOption(label: L("自定义"), value: "自定义")
                     ],
                     selection: $aiProvider
                 )
@@ -137,8 +163,8 @@ struct SettingsView: View {
                     .cornerRadius(9)
                     .overlay(RoundedRectangle(cornerRadius: 9).stroke(Theme.border))
             }
-            field("模型名") {
-                TextField("例如 gpt-4o-mini / qwen-max", text: $aiModelName)
+            field(L("模型名")) {
+                TextField(L("例如 gpt-4o-mini / qwen-max"), text: $aiModelName)
                     .textFieldStyle(.plain)
                     .padding(9)
                     .background(Theme.panel2)
@@ -147,7 +173,7 @@ struct SettingsView: View {
             }
             HStack(spacing: 12) {
                 primaryButton(aiSaveLabel) { saveOnlineAI() }
-                hint("密钥仅保存在本机")
+                hint(L("密钥仅保存在本机"))
             }
             .padding(.leading, labelWidth + fieldSpacing)
         }
@@ -157,8 +183,8 @@ struct SettingsView: View {
 
     private var asrSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            groupTitle("语音识别")
-            field("类型") { modeSelect($asrMode) }
+            groupTitle(L("语音识别"))
+            field(L("类型")) { modeSelect($asrMode) }
             if asrMode == "online" { asrOnlinePanel } else { asrLocalPanel }
         }
         .padding(.vertical, 18)
@@ -166,7 +192,7 @@ struct SettingsView: View {
 
     private var asrLocalPanel: some View {
         VStack(alignment: .leading, spacing: 0) {
-            field("模型") { modelRow("SenseVoice", on: asr.phase == .ready, label: asr.phase == .ready ? "已就绪" : asrStatusShort) }
+            field(L("模型")) { modelRow("SenseVoice", on: asr.phase == .ready, label: asr.phase == .ready ? L("已就绪") : asrStatusShort) }
 
             if asr.phase == .working && asr.progress >= 0 {
                 ProgressView(value: asr.progress)
@@ -179,7 +205,7 @@ struct SettingsView: View {
             HStack(spacing: 12) {
                 primaryButton(asrButtonTitle, disabled: !asrCanInstall) { asr.install() }
                 if asr.phase == .ready {
-                    hint("本地离线 · 166MB")
+                    hint(L("本地离线 · 166MB"))
                 }
             }
             .padding(.leading, labelWidth + fieldSpacing)
@@ -188,26 +214,26 @@ struct SettingsView: View {
 
     private var asrOnlinePanel: some View {
         VStack(alignment: .leading, spacing: 0) {
-            field("服务商") {
+            field(L("服务商")) {
                 Dropdown(
                     options: [
-                        DropdownOption(label: "豆包", value: "豆包"),
-                        DropdownOption(label: "自定义", value: "自定义")
+                        DropdownOption(label: L("豆包"), value: "豆包"),
+                        DropdownOption(label: L("自定义"), value: "自定义")
                     ],
                     selection: $asrProvider
                 )
             }
-            field("模型版本") {
+            field(L("模型版本")) {
                 Dropdown(
                     options: [
-                        DropdownOption(label: "流式语音识别 2.0（推荐）", value: "2.0"),
-                        DropdownOption(label: "流式语音识别 1.0", value: "1.0")
+                        DropdownOption(label: L("流式语音识别 1.0"), value: "1.0"),
+                        DropdownOption(label: L("流式语音识别 2.0（推荐）"), value: "2.0")
                     ],
                     selection: $asrVersion
                 )
             }
             field("API Key") {
-                SecureField("火山引擎控制台的 API Key", text: $asrKey)
+                SecureField(L("火山引擎控制台的 API Key"), text: $asrKey)
                     .textFieldStyle(.plain)
                     .padding(9)
                     .background(Theme.panel2)
@@ -216,7 +242,7 @@ struct SettingsView: View {
             }
             HStack(spacing: 12) {
                 primaryButton(asrSaveLabel) { saveOnlineASR() }
-                hint("大模型流式识别(小时版) · 按量计费 · 密钥仅保存在本机")
+                hint(L("大模型流式识别(小时版) · 按量计费 · 密钥仅保存在本机"))
             }
             .padding(.leading, labelWidth + fieldSpacing)
         }
@@ -225,13 +251,13 @@ struct SettingsView: View {
     // MARK: - 保存动作（线上配置目前仅本地保存草稿）
 
     private func saveOnlineAI() {
-        aiSaveLabel = "已保存 ✓"
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { aiSaveLabel = "保存配置" }
+        aiSaved = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { aiSaved = false }
     }
 
     private func saveOnlineASR() {
-        asrSaveLabel = "已保存 ✓"
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { asrSaveLabel = "保存配置" }
+        asrSaved = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { asrSaved = false }
     }
 
     // MARK: - 通用小组件
@@ -262,8 +288,8 @@ struct SettingsView: View {
     private func modeSelect(_ selection: Binding<String>) -> some View {
         Dropdown(
             options: [
-                DropdownOption(label: "本地", value: "local"),
-                DropdownOption(label: "线上", value: "online")
+                DropdownOption(label: L("本地"), value: "local"),
+                DropdownOption(label: L("线上"), value: "online")
             ],
             selection: selection
         )
@@ -314,19 +340,19 @@ struct SettingsView: View {
 
     private var aiStatusShort: String {
         switch ai.phase {
-        case .working: return "安装中…"
-        case .failed: return "安装失败"
-        case .ready: return "已就绪"
-        default: return "未安装"
+        case .working: return L("安装中…")
+        case .failed: return L("安装失败")
+        case .ready: return L("已就绪")
+        default: return L("未安装")
         }
     }
 
     private var buttonTitle: String {
         switch ai.phase {
-        case .working: return "安装中…"
-        case .ready: return "已就绪"
-        case .failed: return "重试安装"
-        default: return "安装本地模型"
+        case .working: return L("安装中…")
+        case .ready: return L("已就绪")
+        case .failed: return L("重试安装")
+        default: return L("安装本地模型")
         }
     }
 
@@ -341,19 +367,19 @@ struct SettingsView: View {
 
     private var asrStatusShort: String {
         switch asr.phase {
-        case .working: return "安装中…"
-        case .failed: return "安装失败"
-        case .ready: return "已就绪"
-        default: return "未安装"
+        case .working: return L("安装中…")
+        case .failed: return L("安装失败")
+        case .ready: return L("已就绪")
+        default: return L("未安装")
         }
     }
 
     private var asrButtonTitle: String {
         switch asr.phase {
-        case .working: return "安装中…"
-        case .ready: return "已就绪"
-        case .failed: return "重试安装"
-        default: return "安装本地模型"
+        case .working: return L("安装中…")
+        case .ready: return L("已就绪")
+        case .failed: return L("重试安装")
+        default: return L("安装本地模型")
         }
     }
 
