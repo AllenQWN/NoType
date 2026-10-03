@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+
+# Build artifacts
+*.app
+.tools/
+.module-cache/
+
+# Generated icon intermediates (rebuilt by build.sh)
+assets/appicon_rounded.png
+assets/appicon_512.png
+assets/appicon_128.png
+assets/AppIcon.iconset/
+
+# Code-signing certificates & private keys — NEVER commit
+certs/
+*.key
+*.p12
+*.crt
+*.pem
+*.mobileprovision

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>NoType</string>
+    <key>CFBundleDisplayName</key>
+    <string>NoType</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.notype.app</string>
+    <key>CFBundleExecutable</key>
+    <string>NoType</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>NoType 需要使用麦克风，把你的语音实时转成文字。</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>NoType 需要语音识别权限，用于实时转写你说话的内容。</string>
+</dict>
+</plist>
